@@ -4,15 +4,21 @@
   "description": "web server",
   "main": "index.js",
   "scripts": {
-    "start": "node src/main.ts"
+    "build": "npx tsc",
+    "start": "node dist/index.js",
+    "dev": "npx tsc && node dist/index.js"
   },
   "keywords": [],
   "author": "seolman",
   "license": "MIT",
   "type": "module",
   "devDependencies": {
+    "@types/express": "^5.0.3",
     "@types/node": "^24.0.10",
     "typescript": "^5.8.3",
     "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
   }
 }
