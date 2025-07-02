@@ -6,7 +6,10 @@
 - Learn what makes TypeScript a great language for building fast web servers
 - We'll use production-ready tools for everything in this course
 
-Node.js server handle many requests at once by async event loop.
-Most web servers are CRUD apps and I/O bound workloads are handled great.
+*Node.js* server handle many requests at once by *async event loop*.
+Most web servers are CRUD apps and *I/O bound* workloads are handled great.
 A benefit of single-threaded server is that you don't need to worry about multiple threads accessing shared memory.
 The event loop will handle it.
+
+A fileserver is a simple web server that serves static files.
+Fileserver often serve static assets for website, things like HTML, CSS, Javascript, Images.
