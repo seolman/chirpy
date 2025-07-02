@@ -13,3 +13,7 @@ The event loop will handle it.
 
 A fileserver is a simple web server that serves static files.
 Fileserver often serve static assets for website, things like HTML, CSS, Javascript, Images.
+
+*Express.js* handlers take Request and Response.
+Request contains all information about incoming request like HTTP method, path, headers, and body.
+Response write response to Response object instead of returning a value all at once.
