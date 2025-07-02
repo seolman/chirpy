@@ -17,3 +17,14 @@ Fileserver often serve static assets for website, things like HTML, CSS, Javascr
 *Express.js* handlers take Request and Response.
 Request contains all information about incoming request like HTTP method, path, headers, and body.
 Response write response to Response object instead of returning a value all at once.
+
+```js
+// register middleware
+app.use()
+```
+
+```js
+// apply to specific routes
+app.get("<path>", middlewareLogging, handlerGetUsers)
+```
+
