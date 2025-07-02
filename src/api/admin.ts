@@ -1,7 +1,7 @@
 import type { Response, Request } from "express";
 import { config } from "../config.js";
 
-export async function handlerAdminMetrics(req: Request, res: Response) {
+export async function handlerAdminMetrics(_: Request, res: Response) {
   const html = `
   <html>
     <body>
@@ -15,7 +15,7 @@ export async function handlerAdminMetrics(req: Request, res: Response) {
   res.send(html.trim());
 }
 
-export async function handlerAdminReset(req: Request, res: Response) {
+export async function handlerAdminReset(_: Request, res: Response) {
   config.fileserverHits = 0;
   res.status(200).end();
 }
