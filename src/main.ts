@@ -1,9 +1,7 @@
 import type { request } from "./types";
 
 async function handleRequests(reqs: Array<request>) {
-  for (const req of reqs) {
-    await handleRequest(req);
-  }
+  await Promise.all(reqs.map(handleRequest));
 }
 
 // don't touch below this line
