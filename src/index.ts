@@ -12,7 +12,7 @@ app.use(middlewareLogResponses);
 app.use("/app", middlewareMetricsInc, express.static("./src/app"));
 
 app.get("/api/healthz", handlerReadiness);
-app.post("/api/validate_chirp", handlerValidateChrip);
+app.post("/api/validate_chirp", express.json(), handlerValidateChrip);
 
 app.get("/admin/metrics", handlerAdminMetrics);
 app.post("/admin/reset", handlerAdminReset);
