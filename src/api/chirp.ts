@@ -1,4 +1,6 @@
-import { Request, Response } from "express";
+import {  Request, Response } from "express";
+import { BadRequestError } from "../error.js";
+
 
 export async function handlerValidateChrip(req: Request, res: Response) {
   type parameters = {
@@ -9,10 +11,7 @@ export async function handlerValidateChrip(req: Request, res: Response) {
 
   const maxChirpLength = 140;
   if (param.body.length > maxChirpLength) {
-    res.header("Content-Type", "application/json");
-    res.status(400).send(JSON.stringify({ error: "Chirp is too long" }));
-    res.end();
-    return;
+    throw new BadRequestError(`Chirp is too long. Max length is ${maxChirpLength}`);
   }
 
   const badWords = [
