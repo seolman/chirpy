@@ -2,8 +2,9 @@ import { Request, Response } from "express";
 
 import { createUser, getUserByEmail } from "../db/queries/users.js";
 import { BadRequestError, UnauthorizedError } from "../error.js";
-import { checkPasswordHash, hashPassword } from "../auth.js";
+import { checkPasswordHash, hashPassword, makeJWT } from "../auth.js";
 import type { NewUser, UserResponse } from "../db/schema.js";
+import { config } from "../config.js";
 
 export async function handlerUsersCreate(req: Request, res: Response) {
   type parameters = {
@@ -32,8 +33,10 @@ export async function handlerUserLogin(req: Request, res: Response) {
   type parameters = {
     email: string;
     password: string;
+    expiresInSeconds?: number
   };
-  const { email, password } = req.body as parameters;
+
+  const { email, password, expiresInSeconds } = req.body as parameters;
 
   if (!email || !password) {
     throw new BadRequestError("Missing required fields");
@@ -49,8 +52,15 @@ export async function handlerUserLogin(req: Request, res: Response) {
     throw new UnauthorizedError("Incorrect email or password");
   }
 
+  const exp = expiresInSeconds ? Math.round(expiresInSeconds / 1000) : 3600000;
+
+  const token = makeJWT(user.id, exp, config.api.jwtSecret);
+
   const { hashedPassword: _, ...userResponse } = user;
 
   res.header("Content-type", "application/json; charset=utf-8");
-  res.status(200).send(JSON.stringify(userResponse satisfies UserResponse));
+  res.status(200).send(JSON.stringify({
+    userResponse,
+    token
+  }));
 }

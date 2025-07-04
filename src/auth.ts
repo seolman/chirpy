@@ -1,5 +1,6 @@
 import bcrypt from "bcrypt";
 import jwt, { JwtPayload } from "jsonwebtoken";
+import type { Request } from "express";
 
 import { UnauthorizedError } from "./error.js";
 
@@ -46,4 +47,13 @@ export function validateJWT(tokenString: string, secret: string): string {
   }
 
   return decoded.sub;
+}
+
+export function getBearerToken(req: Request): string {
+  const authHeader = req.get("Authorization");
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    throw new Error("missing or malformed auth header");
+  }
+
+  return authHeader.replace("Bearer ", "").trim();
 }

@@ -2,30 +2,30 @@ import { Request, Response } from "express";
 import { BadRequestError, NotFoundError } from "../error.js";
 import { createChirp, getAllChirps, getChirpById } from "../db/queries/chirps.js";
 import type { Chirp } from "../db/schema.js";
+import { getBearerToken, validateJWT } from "../auth.js";
+import { config } from "../config.js";
 
 
 export async function handlerCreateChirps(req: Request, res: Response) {
   type parameters = {
     body: string;
-    userId: string;
   };
 
-  const params: parameters = req.body;
-
-  if (!params.userId) {
-    throw new BadRequestError("Chirp need user id");
-  }
+  const { body } = req.body as parameters;
   const maxChirpLength = 140;
-  if (params.body.length > maxChirpLength) {
+  if (body.length > maxChirpLength) {
     throw new BadRequestError(`Chirp is too long. Max length is ${maxChirpLength}`);
   }
+
+  const token = getBearerToken(req);
+  const userId = validateJWT(token, config.api.jwtSecret);
 
   const badWords = [
     "kerfuffle",
     "sharbert",
     "fornax",
   ];
-  const cleanedBody = params.body
+  const cleanedBody = body
     .split(" ")
     .map((word) => {
       const lower = word.toLocaleLowerCase();
@@ -36,9 +36,9 @@ export async function handlerCreateChirps(req: Request, res: Response) {
     })
     .join(" ");
 
-  const newParams: parameters = {
+  const newParams = {
     body: cleanedBody,
-    userId: params.userId
+    userId
   };
 
   const chirp = await createChirp(newParams);
