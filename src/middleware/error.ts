@@ -1,11 +1,18 @@
 import type { NextFunction, Request, Response } from "express";
-import { BadRequestError } from "../error.js";
+import { BadRequestError, UnauthorizedError } from "../error.js";
 
 export function middlewareError(err: Error, req: Request, res: Response, next: NextFunction) {
-  res.header("Content-Type", "application/json; charset=utf-8");
-  if (err instanceof BadRequestError) {
-    res.status(err.statusCode).send(JSON.stringify({ error: err.message }));
- } 
+  let statusCode = 500
+  let error = "Something went wrong on our end";
 
-  res.status(500).send(JSON.stringify({ error: "Something went wrong on our end" }));
+  if (err instanceof BadRequestError) {
+    statusCode = err.statusCode
+    error = err.message
+  } else if (err instanceof UnauthorizedError) {
+    statusCode = err.statusCode
+    error = err.message
+  }
+
+  res.header("Content-Type", "application/json; charset=utf-8");
+  res.status(statusCode).send(JSON.stringify({ error }));
 }

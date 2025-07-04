@@ -1,6 +1,7 @@
 import { pgTable, timestamp, varchar, uuid } from "drizzle-orm/pg-core";
 
 export type User = typeof users.$inferSelect;
+export type UserResponse = Omit<typeof users.$inferSelect, "hashedPassword">;
 export type NewUser = typeof users.$inferInsert;
 export type Chirp = typeof chirps.$inferSelect;
 export type NewChirp = typeof chirps.$inferInsert;
@@ -13,6 +14,7 @@ export const users = pgTable("users", {
     .defaultNow()
     .$onUpdate(() => new Date()),
   email: varchar("email", { length: 256 }).unique().notNull(),
+  hashedPassword: varchar("hashed_password").notNull().default("unset")
 });
 
 export const chirps = pgTable("chirps", {
