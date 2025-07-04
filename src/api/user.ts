@@ -2,9 +2,10 @@ import { Request, Response } from "express";
 
 import { createUser, getUserByEmail } from "../db/queries/users.js";
 import { BadRequestError, UnauthorizedError } from "../error.js";
-import { checkPasswordHash, hashPassword, makeJWT } from "../auth.js";
+import { checkPasswordHash, getBearerToken, hashPassword, makeJWT, makeRefreshToken } from "../auth.js";
 import type { NewUser, UserResponse } from "../db/schema.js";
 import { config } from "../config.js";
+import { createRefreshToken, getUserFromRefreshToken, revokeRefreshToken } from "../db/queries/refresh_tokens.js";
 
 export async function handlerUsersCreate(req: Request, res: Response) {
   type parameters = {
@@ -33,10 +34,9 @@ export async function handlerUserLogin(req: Request, res: Response) {
   type parameters = {
     email: string;
     password: string;
-    expiresInSeconds?: number
   };
 
-  const { email, password, expiresInSeconds } = req.body as parameters;
+  const { email, password } = req.body as parameters;
 
   if (!email || !password) {
     throw new BadRequestError("Missing required fields");
@@ -52,15 +52,48 @@ export async function handlerUserLogin(req: Request, res: Response) {
     throw new UnauthorizedError("Incorrect email or password");
   }
 
-  const exp = expiresInSeconds ? Math.round(expiresInSeconds / 1000) : 3600000;
+  const accessTokenExpiresIn = 60 * 60;
+  const refreshTokenExpiresIn = 60 * 60 * 24 * 60;
 
-  const token = makeJWT(user.id, exp, config.api.jwtSecret);
+  const accessToken = makeJWT(user.id, accessTokenExpiresIn, config.api.jwtSecret);
+  const refreshToken = makeRefreshToken();
+
+  await createRefreshToken({
+    token: refreshToken,
+    userId: user.id,
+    expiresAt: new Date(Date.now() + refreshTokenExpiresIn * 1000)
+  });
 
   const { hashedPassword: _, ...userResponse } = user;
 
   res.header("Content-type", "application/json; charset=utf-8");
   res.status(200).send(JSON.stringify({
     userResponse,
-    token
+    token: accessToken,
+    refreshToken
   }));
+}
+
+export async function handlerRefresh(req: Request, res: Response) {
+  const token = getBearerToken(req);
+  const refreshToken = await getUserFromRefreshToken(token);
+
+  if (!refreshToken || refreshToken.revokedAt || refreshToken.expiresAt < new Date()) {
+    throw new UnauthorizedError("invalid or expired refresh token");
+  }
+
+  const refreshTokenExpiresIn = 60 * 60;
+  const newToken = makeJWT(refreshToken.userId, refreshTokenExpiresIn, config.api.jwtSecret);
+
+  res.header("Content-Type", "application/json; charset=utf-8");
+  res.status(200).send(JSON.stringify({
+    token: newToken
+  }));
+}
+
+export async function handlerRevoke(req: Request, res: Response) {
+  const token = getBearerToken(req);
+  await revokeRefreshToken(token);
+  res.header("Content-type", "application/json; charset=utf-8");
+  res.status(204).send();
 }
