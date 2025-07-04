@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 
 import { createUser, getUserByEmail } from "../db/queries/users.js";
 import { BadRequestError, UnauthorizedError } from "../error.js";
-import { checkHashPassword, hashPassword } from "../auth.js";
+import { checkPasswordHash, hashPassword } from "../auth.js";
 import type { NewUser, UserResponse } from "../db/schema.js";
 
 export async function handlerUsersCreate(req: Request, res: Response) {
@@ -44,7 +44,7 @@ export async function handlerUserLogin(req: Request, res: Response) {
     throw new UnauthorizedError("Incorrect email or password");
   }
 
-  const validPassword = await checkHashPassword(password, user.hashedPassword);
+  const validPassword = await checkPasswordHash(password, user.hashedPassword);
   if (!validPassword) {
     throw new UnauthorizedError("Incorrect email or password");
   }
