@@ -24,3 +24,19 @@ export async function getUserByEmail(email: string) {
 
   return result;
 }
+
+export async function updateUserById(email: string, hashedPassword: string, userId: string) {
+  const result = db
+    .update(users)
+    .set({
+      email,
+      hashedPassword,
+      updatedAt: new Date()
+    })
+    .where(eq(users.id, userId))
+    .returning();
+
+  return result;
+}
+
+export async function deleteUser() {}

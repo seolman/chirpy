@@ -1,11 +1,11 @@
 import { Request, Response } from "express";
 
-import { createUser, getUserByEmail } from "../db/queries/users.js";
+import { createUser, getUserByEmail, updateUserById } from "../db/queries/users.js";
 import { BadRequestError, UnauthorizedError } from "../error.js";
-import { checkPasswordHash, getBearerToken, hashPassword, makeJWT, makeRefreshToken } from "../auth.js";
+import { checkPasswordHash, getBearerToken, hashPassword, makeJWT, makeRefreshToken, validateJWT } from "../auth.js";
 import type { NewUser, UserResponse } from "../db/schema.js";
 import { config } from "../config.js";
-import { createRefreshToken, getUserFromRefreshToken, revokeRefreshToken } from "../db/queries/refresh_tokens.js";
+import { createRefreshToken, getUserFromRefreshToken, revokeRefreshToken  } from "../db/queries/refresh_tokens.js";
 
 export async function handlerUsersCreate(req: Request, res: Response) {
   type parameters = {
@@ -30,7 +30,7 @@ export async function handlerUsersCreate(req: Request, res: Response) {
   res.status(201).send(JSON.stringify(userResponse));
 }
 
-export async function handlerUserLogin(req: Request, res: Response) {
+export async function handlerLogin(req: Request, res: Response) {
   type parameters = {
     email: string;
     password: string;
@@ -96,4 +96,25 @@ export async function handlerRevoke(req: Request, res: Response) {
   await revokeRefreshToken(token);
   res.header("Content-type", "application/json; charset=utf-8");
   res.status(204).send();
+}
+
+export async function handlerUsersUpdate(req: Request, res: Response) {
+  type parameter = {
+    email: string;
+    password: string;
+  };
+
+  const { email, password }: parameter = req.body;
+  if (!email || !password) {
+    throw new BadRequestError("missing required fields");
+  }
+
+  const jwtToken = getBearerToken(req);
+  const userId = validateJWT(jwtToken, config.api.jwtSecret);
+  const hashedPassword = await hashPassword(password);
+  const updatedUsers = await updateUserById(email, hashedPassword, userId);
+  const { hashedPassword: _, ...userWithoutPassword } = updatedUsers[0];
+
+  res.header("Content-type", "application/json; charset=utf-8");
+  res.status(200).send(userWithoutPassword);
 }

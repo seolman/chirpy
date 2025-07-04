@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import { BadRequestError, UnauthorizedError } from "../error.js";
+import { BadRequestError, ForbiddenError, NotFoundError, UnauthorizedError } from "../error.js";
 
 export function middlewareError(err: Error, req: Request, res: Response, next: NextFunction) {
   let statusCode = 500
@@ -9,6 +9,12 @@ export function middlewareError(err: Error, req: Request, res: Response, next: N
     statusCode = err.statusCode
     error = err.message
   } else if (err instanceof UnauthorizedError) {
+    statusCode = err.statusCode
+    error = err.message
+  } else if (err instanceof ForbiddenError) {
+    statusCode = err.statusCode
+    error = err.message
+  } else if (err instanceof NotFoundError) {
     statusCode = err.statusCode
     error = err.message
   }
