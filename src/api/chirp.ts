@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { BadRequestError } from "../error.js";
-import { createChirp } from "../db/queries/chirps.js";
+import { BadRequestError, NotFoundError } from "../error.js";
+import { createChirp, getAllChirps, getChirpById } from "../db/queries/chirps.js";
 import type { Chirp } from "../db/schema.js";
 
 
@@ -51,4 +51,22 @@ export async function handlerCreateChirps(req: Request, res: Response) {
     body: chirp.body,
     userId: chirp.userId
   } as Chirp));
+}
+
+export async function handlerGetAllChirps(req: Request, res: Response) {
+  const chirps = await getAllChirps();
+  res.header("Content-Type", "application/json; charset=utf-8");
+  res.status(200).send(JSON.stringify(chirps));
+}
+
+export async function handlerGetChirpById(req: Request, res: Response) {
+  const chirpId = req.params.chirpId;
+  const chirp = await getChirpById(chirpId);
+
+  if (!chirp) {
+    throw new NotFoundError("chirp not found");
+  }
+
+  res.header("Content-Type", "application/json; charset=utf-8");
+  res.status(200).send(JSON.stringify(chirp));
 }
