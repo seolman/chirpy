@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 
 import { createUser, getUserByEmail, updateUserById, upgradeUserToChirpyRed } from "../db/queries/users.js";
 import { BadRequestError, NotFoundError, UnauthorizedError } from "../error.js";
-import { checkPasswordHash, getBearerToken, hashPassword, makeJWT, makeRefreshToken, validateJWT } from "../auth.js";
+import { checkPasswordHash, getAPIKey, getBearerToken, hashPassword, makeJWT, makeRefreshToken, validateJWT } from "../auth.js";
 import type { NewUser, UserResponse } from "../db/schema.js";
 import { config } from "../config.js";
 import { createRefreshToken, getUserFromRefreshToken, revokeRefreshToken } from "../db/queries/refresh_tokens.js";
@@ -131,6 +131,10 @@ export async function handlerUserUpdateToRed(req: Request, res: Response) {
     };
   };
   const { event, data }: parameters = req.body;
+  const authHeader = getAPIKey(req);
+  if (authHeader !== config.api.polkaKey) {
+    throw new UnauthorizedError("wrong api key");
+  }
 
   if (event !== "user.upgraded") {
     res.status(204).send();

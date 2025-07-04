@@ -63,3 +63,12 @@ export function makeRefreshToken() {
   return randomBytes(32).toString("hex");
 }
 
+
+export function getAPIKey(req: Request) {
+  const authHeader = req.get("Authorization");
+  if (!authHeader || !authHeader.startsWith("ApiKey ")) {
+    throw new UnauthorizedError("missing or malformed auth header");
+  }
+
+  return authHeader.replace("ApiKey ", "").trim();
+}
