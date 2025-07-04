@@ -1,11 +1,11 @@
 import { Request, Response } from "express";
 
-import { createUser, getUserByEmail, updateUserById } from "../db/queries/users.js";
-import { BadRequestError, UnauthorizedError } from "../error.js";
+import { createUser, getUserByEmail, updateUserById, upgradeUserToChirpyRed } from "../db/queries/users.js";
+import { BadRequestError, NotFoundError, UnauthorizedError } from "../error.js";
 import { checkPasswordHash, getBearerToken, hashPassword, makeJWT, makeRefreshToken, validateJWT } from "../auth.js";
 import type { NewUser, UserResponse } from "../db/schema.js";
 import { config } from "../config.js";
-import { createRefreshToken, getUserFromRefreshToken, revokeRefreshToken  } from "../db/queries/refresh_tokens.js";
+import { createRefreshToken, getUserFromRefreshToken, revokeRefreshToken } from "../db/queries/refresh_tokens.js";
 
 export async function handlerUsersCreate(req: Request, res: Response) {
   type parameters = {
@@ -68,9 +68,13 @@ export async function handlerLogin(req: Request, res: Response) {
 
   res.header("Content-type", "application/json; charset=utf-8");
   res.status(200).send(JSON.stringify({
-    userResponse,
+    id: userResponse.id,
+    email: userResponse.email,
+    createdAt: userResponse.createdAt,
+    updatedAt: userResponse.updatedAt,
+    isChirpyRed: userResponse.isChirpyRed,
     token: accessToken,
-    refreshToken
+    refreshToken: refreshToken
   }));
 }
 
@@ -117,4 +121,32 @@ export async function handlerUsersUpdate(req: Request, res: Response) {
 
   res.header("Content-type", "application/json; charset=utf-8");
   res.status(200).send(userWithoutPassword);
+}
+
+export async function handlerUserUpdateToRed(req: Request, res: Response) {
+  type parameters = {
+    event: string;
+    data: {
+      userId: string;
+    };
+  };
+  const { event, data }: parameters = req.body;
+
+  if (event !== "user.upgraded") {
+    res.status(204).send();
+    return;
+  }
+
+  const userId = data?.userId;
+  if (!userId) {
+    return res.status(204).send();
+  }
+
+  const [updated] = await upgradeUserToChirpyRed(userId);
+
+  if (!updated) {
+    throw new NotFoundError("User not found");
+  }
+
+  res.status(204).send();
 }

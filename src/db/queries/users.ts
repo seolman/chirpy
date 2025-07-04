@@ -39,4 +39,15 @@ export async function updateUserById(email: string, hashedPassword: string, user
   return result;
 }
 
-export async function deleteUser() {}
+export async function upgradeUserToChirpyRed(userId: string) {
+  const result = db
+    .update(users)
+    .set({
+      isChirpyRed: true,
+      updatedAt: new Date()
+    })
+    .where(eq(users.id, userId))
+    .returning();
+
+  return result;
+}
